@@ -39,6 +39,7 @@ public class Rocket : MonoBehaviour
     public ParticleSystem BoostParts;
     public ParticleSystem Fire;
     public Text VelocityText;
+    public Text StartText;
     public Text DistanceText;
     public Text HighestVelocityText;
     public Text LongestDistanceText;
@@ -56,7 +57,7 @@ public class Rocket : MonoBehaviour
 
     private int LongestDistance;
     private int HighestVelocity;
-    
+    bool hasStarted;
     // Start is called before the first frame update
     void Start()
 
@@ -69,108 +70,123 @@ public class Rocket : MonoBehaviour
         HighestVelocity = PlayerPrefs.GetInt("HighestVelocity");
         HighestVelocityText.text = "highest Velocity: " + HighestVelocity;
         StartPoint = new Vector3(transform.position.x,transform.position.y,transform.position.z);
-  
-        MalfunctionTimer = Time.time + Random.Range(MinTimeBetweenMalfunction, MaxTimeBetweenMalfunction);
-       
-        //set initial thrust and torque
-        Thrust(LaunchForce);
-        Torque(LaunchTorque);
         Cursor.visible = false;
+        hasstarted = false;
+      
 
     }
 
+    void StartGame()
+    {
+        MalfunctionTimer = Time.time + Random.Range(MinTimeBetweenMalfunction, MaxTimeBetweenMalfunction);
 
+        //set initial thrust and torque
+        Thrust(LaunchForce);
+        Torque(LaunchTorque);
+        BoostParts.Play();
+        aud.Play();
+        hasstarted = true;
+    }
 
     private void FixedUpdate()
     {
-        if (rb.angularVelocity.magnitude <= 1.0f)
+        if (hasstarted)
         {
-            MalfunctionText.SetActive(false);
-        }
+            if (rb.angularVelocity.magnitude <= 0.2f)
+            {
+                MalfunctionText.SetActive(false);
+            }
 
             if (hasstarted)
-        {
-            if (rb.velocity.magnitude <= 2.0f & !HasBoost)
             {
-                Debug.LogError("speed too low and no boost");
-                GetComponent<HealthComponent>().TakeDamage(500);
-            }
-            else if (rb.velocity.magnitude <= 10.0f & HasBoost)
-            {
-                Boost();
-            }
-        }
-        else
-        {
-            hasstarted = true;
-        }
-       
-        
-
-        //trigger malfunction if time
-        if (Time.time > MalfunctionTimer)
-        {
-            Malfunction();
-            //reset malfunction timer
-            MalfunctionTimer = Time.time + Random.Range(MinTimeBetweenMalfunction, MaxTimeBetweenMalfunction);
-
-        }
-       
-
-        //player inputs
-            UpThrust((Speed *Velocity) *Input.GetAxis("Vertical"));
-            Strafe((Speed * Velocity) *Input.GetAxis("Strafe"));
-            Thrust(Acceleration);
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            if (HasBoost)
-            {
-                Boost();
-            
+                if (rb.velocity.magnitude <= 5.0f & !HasBoost)
+                {
+                    Debug.LogError("speed too low and no boost");
+                    GetComponent<HealthComponent>().TakeDamage(500);
+                }
+                else if (rb.velocity.magnitude <= 10.0f & HasBoost)
+                {
+                    Boost();
+                }
             }
             else
             {
-                aud.clip = Negative;
-                aud.volume = 100;
-                aud.Play();
+                hasstarted = true;
+            }
+
+
+
+            //trigger malfunction if time
+            if (Time.time > MalfunctionTimer)
+            {
+                Malfunction();
+                //reset malfunction timer
+                MalfunctionTimer = Time.time + Random.Range(MinTimeBetweenMalfunction, MaxTimeBetweenMalfunction);
+
+            }
+
+
+            //player inputs
+            UpThrust((Speed * Velocity) * Input.GetAxis("Vertical"));
+            Strafe((Speed * Velocity) * Input.GetAxis("Strafe"));
+            Thrust(Acceleration);
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                if (HasBoost)
+                {
+                    Boost();
+
+                }
+                else
+                {
+                    aud.clip = Negative;
+                    aud.volume = 100;
+                    aud.Play();
+                }
+            }
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                SceneManager.LoadScene(0);
             }
         }
-        if (Input.GetKeyDown(KeyCode.Escape))
+        else if(Input.anyKey)
         {
-            SceneManager.LoadScene(0);
+            StartGame();
+            StartText.gameObject.SetActive(false);
         }
-     
 
     }
 
     private void LateUpdate()
     {
-        Velocity = Mathf.Abs(Mathf.RoundToInt(rb.velocity.x));
-        VelocityText.text = "Speed: " + Velocity;
-        DistanceTravelled = Mathf.RoundToInt(Vector3.Distance(transform.position, StartPoint));
-        DistanceText.text = "Distance Travelled: " + DistanceTravelled;
-
-        if (DistanceTravelled > LongestDistance)
+        if (hasstarted)
         {
-            LongestDistance = Mathf.RoundToInt(DistanceTravelled);
-            PlayerPrefs.SetInt("LongestDistance", Mathf.RoundToInt(DistanceTravelled));
-            LongestDistanceText.text = "Longest Distance: " + DistanceTravelled;
-            LongestDistanceText.color = Color.green;
-            DistanceText.color = Color.green;
-            
-        }
+            Velocity = Mathf.Abs(Mathf.RoundToInt(rb.velocity.x));
+            VelocityText.text = "Speed: " + Velocity;
+            DistanceTravelled = Mathf.RoundToInt(Vector3.Distance(transform.position, StartPoint));
+            DistanceText.text = "Distance Travelled: " + DistanceTravelled;
 
-        if (Velocity > HighestVelocity)
-        {
-            HighestVelocity = Mathf.RoundToInt(Velocity);
-            PlayerPrefs.SetInt("HighestVelocity", Mathf.RoundToInt(Velocity));
-            HighestVelocityText.text = "Highest Velocity: " + Velocity;
-            HighestVelocityText.color = Color.green;
-            VelocityText.color = Color.green;
+            if (DistanceTravelled > LongestDistance)
+            {
+                LongestDistance = Mathf.RoundToInt(DistanceTravelled);
+                PlayerPrefs.SetInt("LongestDistance", Mathf.RoundToInt(DistanceTravelled));
+                LongestDistanceText.text = "Longest Distance: " + DistanceTravelled;
+                LongestDistanceText.color = Color.green;
+                DistanceText.color = Color.green;
+
+            }
+
+            if (Velocity > HighestVelocity)
+            {
+                HighestVelocity = Mathf.RoundToInt(Velocity);
+                PlayerPrefs.SetInt("HighestVelocity", Mathf.RoundToInt(Velocity));
+                HighestVelocityText.text = "Highest Velocity: " + Velocity;
+                HighestVelocityText.color = Color.green;
+                VelocityText.color = Color.green;
+            }
+
         }
-     
-       
     }
 
     public void Boost()
