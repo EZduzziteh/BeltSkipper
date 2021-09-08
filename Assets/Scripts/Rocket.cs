@@ -113,7 +113,9 @@ public class Rocket : MonoBehaviour
             {
                 hasstarted = true;
             }
-
+            
+                
+            
 
 
             //trigger malfunction if time
@@ -127,30 +129,81 @@ public class Rocket : MonoBehaviour
 
 
             //player inputs
-            UpThrust((Speed * Velocity) * Input.GetAxis("Vertical"));
-            Strafe((Speed * Velocity) * Input.GetAxis("Strafe"));
-            Thrust(Acceleration);
+            //#TODO setup console inputs
 
-            if (Input.GetKeyDown(KeyCode.Space))
+            //mobile input
+            /*if (Application.isMobilePlatform)
             {
+                Vector3 movement = new Vector3(Input.acceleration.x, 0.0f, 0.0f);
+                rb.velocity = movement * Speed;
+                if (Input.touchCount>0)
+                {
+                    if (HasBoost)
+                    {
+                        Boost();
+
+                    }
+                    else
+                    {
+                        aud.clip = Negative;
+                        aud.volume = 100;
+                        aud.Play();
+                    }
+                }
+                if (Input.GetKeyDown(KeyCode.Escape))//back button mobile?
+                {
+                    SceneManager.LoadScene(0);
+                }
+            }
+            else
+            {*/
+            //PC/web input
+            if (Application.isMobilePlatform)
+            {
+                Vector3 Tilt = Input.acceleration;
+              //  Tilt = Quaternion.Euler(90, 0, 0) * Tilt;
+                UpThrust((Speed * Velocity) *Tilt.y);
+                Strafe((Speed * Velocity) * Tilt.x);
+                Thrust(Acceleration);
+            }
+            else
+            {
+                UpThrust((Speed * Velocity) * Input.GetAxis("Vertical"));
+                Strafe((Speed * Velocity) * Input.GetAxis("Strafe"));
+                Thrust(Acceleration);
+            }
+              
+
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    if (HasBoost)
+                    {
+                        Boost();
+
+                    }
+                    else
+                    {
+                        aud.clip = Negative;
+                        aud.volume = 100;
+                        aud.Play();
+                    }
+                }else if (Input.touchCount > 0)
+                {
                 if (HasBoost)
                 {
                     Boost();
-
                 }
-                else
+                }
+                if (Input.GetKeyDown(KeyCode.Escape))
                 {
-                    aud.clip = Negative;
-                    aud.volume = 100;
-                    aud.Play();
+                    SceneManager.LoadScene(0);
                 }
-            }
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                SceneManager.LoadScene(0);
-            }
+           // }
+
+           
+
         }
-        else if(Input.anyKey)
+        else if(Input.anyKey)//has not started
         {
             StartGame();
             StartText.gameObject.SetActive(false);
