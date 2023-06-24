@@ -88,6 +88,7 @@ public class HealthComponent : MonoBehaviour
             }
 
             LoseScreen.SetActive(true);
+            FindObjectOfType<ADManager>().StartAdTimer(2.0f);
             Cursor.visible = true;
             Destroy(this.gameObject);
         }
@@ -97,15 +98,9 @@ public class HealthComponent : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
        
-            if (collision.gameObject.GetComponent<Projectile>())
-            {
-                TakeDamage(collision.gameObject.GetComponent<Projectile>().Damage);
-                Destroy(collision.gameObject);
-            }
-            else if (Vector3.Magnitude(collision.relativeVelocity) >= CollisionVelocityThreshold)
-            {
+            
                 TakeDamage(Vector3.Magnitude(collision.relativeVelocity) * 100.0f);
-            }
+            
         
 
         
